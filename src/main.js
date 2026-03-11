@@ -1,171 +1,186 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import fs from 'node:fs/promises';
 import path from 'node:path';
-import fs from 'node:fs';
+
+import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import started from 'electron-squirrel-startup';
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+import { APP_HEIGHT, APP_WIDTH } from './renderer/constants.js';
+
+const BACKGROUND_COLOR = '#00000000';
+const DEV_SERVER_WAIT_MS = 2000;
+const IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp'];
+const VIDEO_EXTENSIONS = ['mp4', 'mov', 'avi', 'mkv', 'webm'];
+
 if (started) {
   app.quit();
 }
 
 let mainWindow = null;
 
-const createWindow = () => {
-  // Create the browser window.
+function getMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    throw new Error('Main window is not available.');
+  }
+
+  return mainWindow;
+}
+
+function isDevelopment() {
+  return process.env.NODE_ENV === 'development' || Boolean(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+}
+
+function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 375,
-    height: 885, // 815 (background) + 70 (controls)
+    backgroundColor: BACKGROUND_COLOR,
+    frame: false,
+    height: APP_HEIGHT,
     resizable: false,
-    useContentSize: true,
-    frame: false, // Cleaner without title bar
     transparent: true,
+    useContentSize: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      webSecurity: false,
+      preload: path.join(__dirname, 'preload.js'),
+      webSecurity: true,
     },
-    backgroundColor: '#00000000',
+    width: APP_WIDTH,
   });
 
-  // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    // Wait a bit for Vite server to be ready
+    // Give the Vite dev server a short window to finish booting.
     setTimeout(() => {
-      mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL).catch(err => {
-        console.error('Failed to load URL:', err);
+      mainWindow?.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL).catch((error) => {
+        console.error('Failed to load renderer URL:', error);
       });
-    }, 2000);
+    }, DEV_SERVER_WAIT_MS);
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)).catch((error) => {
+      console.error('Failed to load renderer file:', error);
+    });
   }
 
-  // Open the DevTools in development.
-  if (process.env.NODE_ENV === 'development' || MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+  if (isDevelopment()) {
     mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
-};
+}
 
-// IPC Handlers
+function getFileDialogOptions(title, extensions) {
+  return {
+    filters: [{ extensions, name: title }],
+    properties: ['openFile'],
+    title,
+  };
+}
 
-// Open file dialog for video selection
-ipcMain.handle('dialog:openVideo', async () => {
-  const result = await dialog.showOpenDialog(mainWindow, {
-    title: 'Select Video',
-    filters: [
-      { name: 'Video Files', extensions: ['mp4', 'mov', 'avi', 'mkv'] }
-    ],
-    properties: ['openFile']
-  });
+async function openFileAsBase64(title, extensions) {
+  const result = await dialog.showOpenDialog(getMainWindow(), getFileDialogOptions(title, extensions));
 
   if (result.canceled || result.filePaths.length === 0) {
     return null;
   }
 
-  const filePath = result.filePaths[0];
-  const fileBuffer = fs.readFileSync(filePath);
+  const [filePath] = result.filePaths;
+  const fileBuffer = await fs.readFile(filePath);
 
   return {
+    data: fileBuffer.toString('base64'),
     name: path.basename(filePath),
-    data: fileBuffer.toString('base64')
   };
-});
+}
 
-// Open file dialog for background image
-ipcMain.handle('dialog:openBackground', async () => {
-  const result = await dialog.showOpenDialog(mainWindow, {
-    title: 'Select Background Image',
-    filters: [
-      { name: 'Image Files', extensions: ['png', 'jpg', 'jpeg', 'webp'] }
-    ],
-    properties: ['openFile']
+function validateString(value, fieldName) {
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw new Error(`Invalid ${fieldName}.`);
+  }
+}
+
+function validateWriteRequest(payload) {
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Invalid write request.');
+  }
+
+  validateString(payload.filePath, 'file path');
+  validateString(payload.data, 'file data');
+}
+
+function registerIpcHandlers() {
+  ipcMain.handle('app:getPath', async (_event, pathName) => {
+    validateString(pathName, 'path name');
+    return app.getPath(pathName);
   });
 
-  if (result.canceled || result.filePaths.length === 0) {
-    return null;
-  }
-
-  const filePath = result.filePaths[0];
-  const fileBuffer = fs.readFileSync(filePath);
-
-  return {
-    name: path.basename(filePath),
-    data: fileBuffer.toString('base64')
-  };
-});
-
-// Save exported video
-ipcMain.handle('dialog:saveVideo', async (event, defaultName) => {
-  const result = await dialog.showSaveDialog(mainWindow, {
-    title: 'Save Video',
-    defaultPath: defaultName || 'output.mp4',
-    filters: [
-      { name: 'MP4 Video', extensions: ['mp4'] }
-    ]
+  ipcMain.handle('app:getVersion', async () => {
+    return app.getVersion();
   });
 
-  return result.canceled ? null : result.filePath;
-});
+  ipcMain.handle('dialog:openBackground', async () => {
+    return openFileAsBase64('Select Background Image', IMAGE_EXTENSIONS);
+  });
 
-// Write file to disk
-ipcMain.handle('fs:writeFile', async (event, { filePath, data }) => {
-  try {
-    const buffer = Buffer.from(data, 'base64');
-    fs.writeFileSync(filePath, buffer);
-    return { success: true };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-});
+  ipcMain.handle('dialog:openVideo', async () => {
+    return openFileAsBase64('Select Video', VIDEO_EXTENSIONS);
+  });
 
-// Read file as base64
-ipcMain.handle('fs:readFile', async (event, filePath) => {
-  try {
-    const buffer = fs.readFileSync(filePath);
-    return { success: true, data: buffer.toString('base64') };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-});
+  ipcMain.handle('dialog:saveVideo', async (_event, defaultName) => {
+    const defaultPath = typeof defaultName === 'string' && defaultName.trim() ? defaultName : 'output.webm';
+    const result = await dialog.showSaveDialog(getMainWindow(), {
+      defaultPath,
+      filters: [{ extensions: ['webm'], name: 'WebM Video' }],
+      title: 'Save Video',
+    });
 
-ipcMain.handle('ffmpeg:readAsset', async (event, fileName) => {
-  const candidates = [
-    path.join(app.getAppPath(), 'public', 'ffmpeg', fileName),
-    path.join(process.cwd(), 'public', 'ffmpeg', fileName),
-  ];
+    return result.canceled ? null : result.filePath;
+  });
 
-  for (const candidate of candidates) {
-    try {
-      const buffer = fs.readFileSync(candidate);
-      return { success: true, data: buffer.toString('base64') };
-    } catch (error) {
-      continue;
+  ipcMain.handle('ffmpeg:readAsset', async (_event, fileName) => {
+    validateString(fileName, 'FFmpeg asset name');
+
+    const candidates = [
+      path.join(app.getAppPath(), 'public', 'ffmpeg', fileName),
+      path.join(process.cwd(), 'public', 'ffmpeg', fileName),
+    ];
+
+    for (const candidate of candidates) {
+      try {
+        const buffer = await fs.readFile(candidate);
+        return { data: buffer.toString('base64'), success: true };
+      } catch {
+        continue;
+      }
     }
-  }
 
-  return {
-    success: false,
-    error: `FFmpeg asset not found: ${fileName}. Tried: ${candidates.join(', ')}`
-  };
-});
+    return {
+      error: `FFmpeg asset not found: ${fileName}. Tried: ${candidates.join(', ')}`,
+      success: false,
+    };
+  });
 
-// Get user data path for FFmpeg
-ipcMain.handle('app:getPath', async (event, name) => {
-  return app.getPath(name);
-});
+  ipcMain.handle('fs:readFile', async (_event, filePath) => {
+    try {
+      validateString(filePath, 'file path');
+      const buffer = await fs.readFile(filePath);
+      return { data: buffer.toString('base64'), success: true };
+    } catch (error) {
+      return { error: error.message, success: false };
+    }
+  });
 
-// Get app version
-ipcMain.handle('app:getVersion', async () => {
-  return app.getVersion();
-});
+  ipcMain.handle('fs:writeFile', async (_event, payload) => {
+    try {
+      validateWriteRequest(payload);
+      const buffer = Buffer.from(payload.data, 'base64');
+      await fs.writeFile(payload.filePath, buffer);
+      return { success: true };
+    } catch (error) {
+      return { error: error.message, success: false };
+    }
+  });
+}
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
 app.whenReady().then(() => {
+  registerIpcHandlers();
   createWindow();
 
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -173,7 +188,6 @@ app.whenReady().then(() => {
   });
 });
 
-// Quit when all windows are closed, except on macOS.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();

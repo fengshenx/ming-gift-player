@@ -8,22 +8,19 @@
     <link rel="stylesheet" href="/src/index.css" />
   </head>
   <body>
-    <div id="app">
-      <!-- Main content -->
-      <main class="main">
-        <!-- Header Overlay -->
-        <header class="header">
-          <button id="btn-load-video" class="btn btn-primary">Load Video</button>
-        </header>
+    <div id="app" class="gp-app">
+      <header class="gp-titlebar">
+        <div class="gp-titlebar-title">Gift Player</div>
+      </header>
 
-        <!-- Drop zone -->
-        <div id="drop-zone" class="drop-zone">
-          <div id="canvas-container" class="canvas-container">
+      <main class="gp-main">
+        <div id="drop-zone" class="gp-drop-zone">
+          <div id="canvas-container" class="gp-canvas-container">
             <canvas id="video-canvas"></canvas>
           </div>
-          <div id="drop-overlay" class="drop-overlay">
-            <div class="drop-message">
-              <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <div id="drop-overlay" class="gp-drop-overlay">
+            <div class="gp-drop-message">
+              <svg class="gp-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="17 8 12 3 7 8"/>
                 <line x1="12" y1="3" x2="12" y2="15"/>
@@ -31,33 +28,38 @@
               <p>Drop video here</p>
             </div>
           </div>
-          <!-- Video info overlay -->
-          <div id="video-info" class="video-info hidden">
+          <div id="video-info" class="gp-video-info hidden">
             <span id="video-name"></span>
           </div>
         </div>
       </main>
 
-      <!-- Controls (Outside area at bottom) -->
-      <footer class="controls">
-        <div class="playback-controls-row">
-          <div class="playback-buttons">
-            <button id="btn-play" class="btn btn-icon" title="Play/Pause">
-              <svg id="icon-play" class="icon" viewBox="0 0 24 24" fill="currentColor">
+      <footer class="gp-controls">
+        <div class="gp-playback-controls-row">
+          <div class="gp-playback-buttons">
+            <button id="btn-load-video" class="gp-btn gp-btn-icon" title="Load Video" aria-label="Load Video">
+              <svg class="gp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+            </button>
+            <button id="btn-play" class="gp-btn gp-btn-icon" title="Play/Pause">
+              <svg id="icon-play" class="gp-icon" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="5 3 19 12 5 21 5 3"/>
               </svg>
-              <svg id="icon-pause" class="icon hidden" viewBox="0 0 24 24" fill="currentColor">
+              <svg id="icon-pause" class="gp-icon hidden" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="6" y="4" width="4" height="16"/>
                 <rect x="14" y="4" width="4" height="16"/>
               </svg>
             </button>
-            <button id="btn-stop" class="btn btn-icon" title="Stop">
-              <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+            <button id="btn-stop" class="gp-btn gp-btn-icon" title="Stop">
+              <svg class="gp-icon" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="6" y="6" width="12" height="12"/>
               </svg>
             </button>
-            <button id="btn-loop" class="btn btn-icon" title="Loop">
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button id="btn-loop" class="gp-btn gp-btn-icon" title="Loop">
+              <svg class="gp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="17 1 21 5 17 9"/>
                 <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
                 <polyline points="7 23 3 19 7 15"/>
@@ -66,22 +68,19 @@
             </button>
           </div>
 
-          <!-- Progress bar -->
-          <div class="progress-container">
-            <span id="time-current" class="time-display">0:00</span>
-            <div id="progress-bar" class="progress-bar">
-              <div id="progress-fill" class="progress-fill"></div>
-            </div>
-            <span id="time-total" class="time-display">0:00</span>
-          </div>
-          
-          <button id="btn-export" class="btn btn-primary" style="background: var(--accent-color); color: #000;" disabled>Export</button>
+          <button id="btn-export" class="gp-btn gp-btn-icon gp-btn-export" title="Export" aria-label="Export">
+            <svg class="gp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 3v12"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <path d="M5 21h14"/>
+            </svg>
+          </button>
         </div>
       </footer>
 
-      <!-- Loading overlay -->
-      <div id="loading-overlay" class="loading-overlay hidden">
-        <div class="loading-spinner"></div>
+      <div id="loading-overlay" class="gp-loading-overlay hidden">
+        <div class="gp-loading-spinner"></div>
+        <p id="loading-message" class="gp-loading-message">Loading...</p>
       </div>
     </div>
 
