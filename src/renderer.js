@@ -149,7 +149,7 @@ function createVideoBlob(fileName, data) {
 }
 
 async function attachVideoBlob(blob, fileName) {
-  showLoading('Loading video...');
+  showLoading('加载视频中...');
 
   const player = state.player ?? new VideoPlayer();
   state.player = player;
@@ -199,7 +199,7 @@ async function handleLoadVideo() {
   } catch (error) {
     console.error('Error loading video:', error);
     hideLoading();
-    alert(`Error loading video: ${error.message}`);
+    alert(`加载视频失败: ${error.message}`);
   }
 }
 
@@ -223,7 +223,7 @@ async function handlePlayPause() {
     updateUi();
   } catch (error) {
     console.error('Error playing video:', error);
-    alert(`Error playing video: ${error.message}`);
+    alert(`播放视频失败: ${error.message}`);
   }
 }
 
@@ -345,7 +345,7 @@ async function exportVideoToPath(exportPath, exportMimeType, backgroundImage) {
   };
 
   recorder.start(250);
-  showLoading('Exporting video...');
+  showLoading('导出视频中...');
   renderExportFrame();
 
   if ('requestVideoFrameCallback' in player.video) {
@@ -400,7 +400,7 @@ async function handleExport() {
   const exportMimeType = getExportMimeType();
 
   if (!exportMimeType) {
-    alert('This environment does not support WebM export.');
+    alert('当前环境不支持 WebM 导出。');
     return;
   }
 
@@ -413,7 +413,7 @@ async function handleExport() {
   const resumeAfterExport = state.playing;
 
   try {
-    showLoading('Preparing export...');
+    showLoading('准备导出...');
     const backgroundImage = await loadBackgroundImage();
     const exportPath = await window.electronAPI.saveVideo(
       `${state.videoName.replace(/\.[^.]+$/, '') || 'output'}.webm`,
@@ -437,10 +437,10 @@ async function handleExport() {
     await player.seek(0);
     state.currentTime = 0;
     renderCurrentFrame();
-    alert(`Exported to:\n${exportPath}`);
+    alert(`已导出到:\n${exportPath}`);
   } catch (error) {
     console.error('Error exporting video:', error);
-    alert(`Error exporting video: ${error.message}`);
+    alert(`导出视频失败: ${error.message}`);
   } finally {
     player.video.loop = previousLoop;
     player.video.onended = previousEndedHandler;
@@ -492,7 +492,7 @@ function setupDragAndDrop() {
     const file = event.dataTransfer?.files[0];
 
     if (!file || !file.type.startsWith('video/')) {
-      alert('Please drop a video file.');
+      alert('请拖放视频文件。');
       return;
     }
 
@@ -501,13 +501,14 @@ function setupDragAndDrop() {
     } catch (error) {
       console.error('Error loading dropped video:', error);
       hideLoading();
-      alert(`Error loading video: ${error.message}`);
+      alert(`加载视频失败: ${error.message}`);
     }
   });
 }
 
 function bindUiEvents() {
   elements.btnLoadVideo?.addEventListener('click', handleLoadVideo);
+  elements.dropOverlay?.addEventListener('click', handleLoadVideo);
   elements.btnPlay?.addEventListener('click', handlePlayPause);
   elements.btnStop?.addEventListener('click', handleStop);
   elements.btnLoop?.addEventListener('click', handleToggleLoop);

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' blob: https://unpkg.com https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://unpkg.com https://cdn.jsdelivr.net; font-src 'self' https://unpkg.com https://cdn.jsdelivr.net;">
-    <title>Gift Player</title>
+    <title>礼物播放器</title>
     <link rel="stylesheet" href="/src/index.css" />
   </head>
   <body>
@@ -21,7 +21,7 @@
                 <polyline points="17 8 12 3 7 8"/>
                 <line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              <p>Drop video here</p>
+              <p>拖放视频到这里</p>
             </div>
           </div>
         </div>
@@ -30,14 +30,14 @@
       <footer class="gp-controls">
         <div class="gp-playback-controls-row">
           <div class="gp-playback-buttons">
-            <button id="btn-load-video" class="gp-btn gp-btn-icon" title="Load Video" aria-label="Load Video">
+            <button id="btn-load-video" class="gp-btn gp-btn-icon" title="加载视频" aria-label="加载视频">
               <svg class="gp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="17 8 12 3 7 8"/>
                 <line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
             </button>
-            <button id="btn-play" class="gp-btn gp-btn-icon" title="Play/Pause">
+            <button id="btn-play" class="gp-btn gp-btn-icon" title="播放/暂停">
               <svg id="icon-play" class="gp-icon" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="5 3 19 12 5 21 5 3"/>
               </svg>
@@ -46,12 +46,12 @@
                 <rect x="14" y="4" width="4" height="16"/>
               </svg>
             </button>
-            <button id="btn-stop" class="gp-btn gp-btn-icon" title="Stop">
+            <button id="btn-stop" class="gp-btn gp-btn-icon" title="停止">
               <svg class="gp-icon" viewBox="0 0 24 24" fill="currentColor">
                 <rect x="6" y="6" width="12" height="12"/>
               </svg>
             </button>
-            <button id="btn-loop" class="gp-btn gp-btn-icon" title="Loop">
+            <button id="btn-loop" class="gp-btn gp-btn-icon" title="循环">
               <svg class="gp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="17 1 21 5 17 9"/>
                 <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
@@ -61,7 +61,7 @@
             </button>
           </div>
 
-          <button id="btn-export" class="gp-btn gp-btn-icon gp-btn-export" title="Export" aria-label="Export">
+          <button id="btn-export" class="gp-btn gp-btn-icon gp-btn-export" title="导出" aria-label="导出">
             <svg class="gp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 3v12"/>
               <polyline points="7 10 12 15 17 10"/>
@@ -73,7 +73,7 @@
 
       <div id="loading-overlay" class="gp-loading-overlay hidden">
         <div class="gp-loading-spinner"></div>
-        <p id="loading-message" class="gp-loading-message">Loading...</p>
+        <p id="loading-message" class="gp-loading-message">加载中...</p>
       </div>
     </div>
 

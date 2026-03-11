@@ -112,19 +112,19 @@ function registerIpcHandlers() {
   });
 
   ipcMain.handle('dialog:openBackground', async () => {
-    return openFileAsBase64('Select Background Image', IMAGE_EXTENSIONS);
+    return openFileAsBase64('选择背景图片', IMAGE_EXTENSIONS);
   });
 
   ipcMain.handle('dialog:openVideo', async () => {
-    return openFileAsBase64('Select Video', VIDEO_EXTENSIONS);
+    return openFileAsBase64('选择视频', VIDEO_EXTENSIONS);
   });
 
   ipcMain.handle('dialog:saveVideo', async (_event, defaultName) => {
     const defaultPath = typeof defaultName === 'string' && defaultName.trim() ? defaultName : 'output.webm';
     const result = await dialog.showSaveDialog(getMainWindow(), {
       defaultPath,
-      filters: [{ extensions: ['webm'], name: 'WebM Video' }],
-      title: 'Save Video',
+      filters: [{ extensions: ['webm'], name: 'WebM 视频' }],
+      title: '保存视频',
     });
 
     return result.canceled ? null : result.filePath;
