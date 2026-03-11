@@ -1,5 +1,3 @@
-import { DEFAULT_EXPORT_FPS } from './constants.js';
-
 export function createCanvas(width, height) {
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -42,24 +40,29 @@ export function drawPackedVideoToContext({
   const frameData = frame.data;
 
   for (let y = 0; y < outputHeight; y += 1) {
-    const rowOffset = y * outputWidth;
+    const packedRowOffset = y * outputWidth * 2;
+    const frameRowOffset = y * outputWidth;
 
     for (let x = 0; x < outputWidth; x += 1) {
-      const pixelOffset = (rowOffset + x) * 4;
-      const colorIndex = pixelOffset + outputWidth * 4;
+      const frameIndex = (frameRowOffset + x) * 4;
+      const alphaIndex = (packedRowOffset + x) * 4;
+      const colorIndex = (packedRowOffset + x + outputWidth) * 4;
       const alpha =
-        packedData[pixelOffset] * 0.299 +
-        packedData[pixelOffset + 1] * 0.587 +
-        packedData[pixelOffset + 2] * 0.114;
+        packedData[alphaIndex] * 0.299 +
+        packedData[alphaIndex + 1] * 0.587 +
+        packedData[alphaIndex + 2] * 0.114;
 
-      frameData[pixelOffset] = packedData[colorIndex];
-      frameData[pixelOffset + 1] = packedData[colorIndex + 1];
-      frameData[pixelOffset + 2] = packedData[colorIndex + 2];
-      frameData[pixelOffset + 3] = alpha;
+      frameData[frameIndex] = packedData[colorIndex];
+      frameData[frameIndex + 1] = packedData[colorIndex + 1];
+      frameData[frameIndex + 2] = packedData[colorIndex + 2];
+      frameData[frameIndex + 3] = alpha;
     }
   }
 
-  context.putImageData(frame, 0, 0);
+  const tempCanvas = createCanvas(outputWidth, outputHeight);
+  const tempContext = tempCanvas.getContext('2d');
+  tempContext.putImageData(frame, 0, 0);
+  context.drawImage(tempCanvas, 0, 0);
 }
 
 export function getExportMimeType() {
@@ -101,5 +104,12 @@ export function waitForEvent(target, eventName) {
 }
 
 export function createCanvasStream(canvas) {
-  return canvas.captureStream(DEFAULT_EXPORT_FPS);
+  return canvas.captureStream(0);
+}
+
+export function requestStreamFrame(stream) {
+  const track = stream.getVideoTracks()[0];
+  if (track && typeof track.requestFrame === 'function') {
+    track.requestFrame();
+  }
 }

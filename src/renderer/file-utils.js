@@ -32,14 +32,15 @@ export function blobToBase64(blob) {
 
     reader.onloadend = () => {
       const result = typeof reader.result === 'string' ? reader.result : '';
-      const base64 = result.split(',')[1];
+      const marker = ';base64,';
+      const markerIndex = result.indexOf(marker);
 
-      if (!base64) {
+      if (markerIndex === -1) {
         reject(new Error('Failed to encode exported video.'));
         return;
       }
 
-      resolve(base64);
+      resolve(result.substring(markerIndex + marker.length));
     };
 
     reader.onerror = () => {

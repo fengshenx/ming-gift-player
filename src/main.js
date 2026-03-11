@@ -32,10 +32,8 @@ function isDevelopment() {
 function createWindow() {
   mainWindow = new BrowserWindow({
     backgroundColor: BACKGROUND_COLOR,
-    frame: false,
     height: APP_HEIGHT,
     resizable: false,
-    transparent: true,
     useContentSize: true,
     webPreferences: {
       contextIsolation: true,

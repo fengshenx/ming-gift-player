@@ -11,6 +11,4 @@ export const elements = {
   loadingMessage: document.getElementById('loading-message'),
   loadingOverlay: document.getElementById('loading-overlay'),
   loadingProgress: document.getElementById('loading-progress'),
-  videoInfo: document.getElementById('video-info'),
-  videoName: document.getElementById('video-name'),
 };

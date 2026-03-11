@@ -6,6 +6,7 @@ import {
   createCanvasStream,
   drawPackedVideoToContext,
   getExportMimeType,
+  requestStreamFrame,
   waitForEvent,
 } from './renderer/media-utils.js';
 import { createInitialState } from './renderer/ui-state.js';
@@ -39,12 +40,6 @@ function showLoading(message, showProgress = false) {
 }
 
 function updateUi() {
-  elements.videoInfo?.classList.toggle('hidden', !state.videoLoaded);
-
-  if (elements.videoName) {
-    elements.videoName.textContent = state.videoName;
-  }
-
   elements.dropZone?.classList.toggle('has-video', state.videoLoaded);
   elements.iconPlay?.classList.toggle('hidden', state.playing);
   elements.iconPause?.classList.toggle('hidden', !state.playing);
@@ -299,6 +294,9 @@ async function exportVideoToPath(exportPath, exportMimeType, backgroundImage) {
   const { exportCanvas, exportContext, scratchCanvas, scratchContext } = createExportContexts(elements.canvas);
   const player = state.player;
 
+  const exportStream = createExportStream(exportCanvas, player.video);
+  const recorder = createExportRecorder(exportStream, exportMimeType);
+
   const drawCompositeFrame = () => {
     exportContext.clearRect(0, 0, exportCanvas.width, exportCanvas.height);
     exportContext.drawImage(backgroundImage, 0, 0, exportCanvas.width, exportCanvas.height);
@@ -310,6 +308,7 @@ async function exportVideoToPath(exportPath, exportMimeType, backgroundImage) {
       scratchContext,
       videoElement: player.video,
     });
+    requestStreamFrame(exportStream);
   };
 
   const renderExportFrame = () => {
@@ -318,9 +317,6 @@ async function exportVideoToPath(exportPath, exportMimeType, backgroundImage) {
     state.currentTime = player.video.currentTime;
     updateUi();
   };
-
-  const exportStream = createExportStream(exportCanvas, player.video);
-  const recorder = createExportRecorder(exportStream, exportMimeType);
   const chunks = [];
   let exportAnimationId = null;
 

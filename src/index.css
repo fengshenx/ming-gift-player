@@ -10,7 +10,6 @@
   --radius-sm: 6px;
   --transition: 0.2s ease;
   --bg-width: 375px;
-  --titlebar-height: 32px;
   --bg-height: 815px;
   --controls-height: 70px;
 }
@@ -39,25 +38,8 @@ body {
   display: flex;
   flex-direction: column;
   width: var(--bg-width);
-  height: calc(var(--titlebar-height) + var(--bg-height) + var(--controls-height));
+  height: calc(var(--bg-height) + var(--controls-height));
   margin: 0 auto;
-}
-
-.gp-titlebar {
-  display: flex;
-  align-items: center;
-  height: var(--titlebar-height);
-  padding: 0 12px;
-  background: rgba(10, 14, 24, 0.92);
-  border-bottom: 1px solid var(--glass-border);
-  -webkit-app-region: drag;
-}
-
-.gp-titlebar-title {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--text-color);
 }
 
 .gp-main {
@@ -67,7 +49,6 @@ body {
   overflow: hidden;
   width: var(--bg-width);
   height: var(--bg-height);
-  -webkit-app-region: drag;
 }
 
 .gp-main::before {
@@ -87,7 +68,6 @@ body {
   align-items: center;
   justify-content: center;
   background: transparent;
-  -webkit-app-region: no-drag;
 }
 
 .gp-drop-zone.drag-over {
@@ -133,21 +113,6 @@ body {
   color: var(--accent-color);
 }
 
-.gp-video-info {
-  position: absolute;
-  right: 16px;
-  bottom: 20px;
-  left: 16px;
-  z-index: 2;
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
-  background: rgba(10, 14, 24, 0.72);
-  backdrop-filter: blur(8px);
-  color: var(--text-color);
-  font-size: 12px;
-  -webkit-app-region: no-drag;
-}
-
 .gp-controls {
   z-index: 100;
   display: flex;
@@ -158,7 +123,6 @@ body {
   padding: 8px 16px;
   background: var(--header-bg);
   border-top: 1px solid var(--glass-border);
-  -webkit-app-region: no-drag;
 }
 
 .gp-playback-controls-row {
