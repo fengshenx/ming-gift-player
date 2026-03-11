@@ -1,13 +1,110 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Hello World!</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' blob: https://unpkg.com https://cdn.jsdelivr.net; worker-src 'self' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://unpkg.com https://cdn.jsdelivr.net; font-src 'self' https://unpkg.com https://cdn.jsdelivr.net;">
+    <title>Gift Player</title>
+    <link rel="stylesheet" href="/src/index.css" />
   </head>
   <body>
-    <h1>💖 Hello World!</h1>
-    <p>Welcome to your Electron application.</p>
+    <div id="app">
+      <!-- Header -->
+      <header class="header">
+        <h1 class="title">Gift Player</h1>
+        <div class="header-actions">
+          <button id="btn-load-video" class="btn btn-primary">Load Video</button>
+          <button id="btn-load-bg" class="btn btn-secondary">Load Background</button>
+        </div>
+      </header>
+
+      <!-- Main content -->
+      <main class="main">
+        <!-- Drop zone / Video display -->
+        <div id="drop-zone" class="drop-zone">
+          <div id="canvas-container" class="canvas-container">
+            <canvas id="video-canvas"></canvas>
+          </div>
+          <div id="drop-overlay" class="drop-overlay">
+            <div class="drop-message">
+              <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p>Drop video file here</p>
+              <p class="drop-hint">or click "Load Video" button</p>
+            </div>
+          </div>
+          <!-- Video info overlay -->
+          <div id="video-info" class="video-info hidden">
+            <span id="video-name"></span>
+          </div>
+        </div>
+      </main>
+
+      <!-- Controls -->
+      <footer class="controls">
+        <div class="playback-controls">
+          <button id="btn-play" class="btn btn-icon" title="Play/Pause">
+            <svg id="icon-play" class="icon" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            <svg id="icon-pause" class="icon hidden" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16"/>
+              <rect x="14" y="4" width="4" height="16"/>
+            </svg>
+          </button>
+          <button id="btn-stop" class="btn btn-icon" title="Stop">
+            <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12"/>
+            </svg>
+          </button>
+          <button id="btn-loop" class="btn btn-icon" title="Loop">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="17 1 21 5 17 9"/>
+              <path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+              <polyline points="7 23 3 19 7 15"/>
+              <path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-container">
+          <span id="time-current" class="time-display">0:00</span>
+          <div id="progress-bar" class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <span id="time-total" class="time-display">0:00</span>
+        </div>
+
+        <!-- Export -->
+        <div class="export-controls">
+          <button id="btn-export" class="btn btn-accent" disabled>Export Video</button>
+        </div>
+      </footer>
+
+      <!-- Loading overlay -->
+      <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p id="loading-message">Loading...</p>
+        <div id="loading-progress" class="loading-progress hidden">
+          <div id="loading-progress-fill" class="loading-progress-fill"></div>
+        </div>
+      </div>
+
+      <!-- Export progress overlay -->
+      <div id="export-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p>Exporting video...</p>
+        <div class="loading-progress">
+          <div id="export-progress-fill" class="loading-progress-fill"></div>
+        </div>
+        <p id="export-status" class="export-status"></p>
+      </div>
+    </div>
+
     <script type="module" src="/src/renderer.js"></script>
   </body>
 </html>
