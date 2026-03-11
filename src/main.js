@@ -130,29 +130,6 @@ function registerIpcHandlers() {
     return result.canceled ? null : result.filePath;
   });
 
-  ipcMain.handle('ffmpeg:readAsset', async (_event, fileName) => {
-    validateString(fileName, 'FFmpeg asset name');
-
-    const candidates = [
-      path.join(app.getAppPath(), 'public', 'ffmpeg', fileName),
-      path.join(process.cwd(), 'public', 'ffmpeg', fileName),
-    ];
-
-    for (const candidate of candidates) {
-      try {
-        const buffer = await fs.readFile(candidate);
-        return { data: buffer.toString('base64'), success: true };
-      } catch {
-        continue;
-      }
-    }
-
-    return {
-      error: `FFmpeg asset not found: ${fileName}. Tried: ${candidates.join(', ')}`,
-      success: false,
-    };
-  });
-
   ipcMain.handle('fs:readFile', async (_event, filePath) => {
     try {
       validateString(filePath, 'file path');

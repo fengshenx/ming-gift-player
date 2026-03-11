@@ -5,7 +5,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getVersion: () => ipcRenderer.invoke('app:getVersion'),
   openBackground: () => ipcRenderer.invoke('dialog:openBackground'),
   openVideo: () => ipcRenderer.invoke('dialog:openVideo'),
-  readFFmpegAsset: (fileName) => ipcRenderer.invoke('ffmpeg:readAsset', fileName),
   readFile: (filePath) => ipcRenderer.invoke('fs:readFile', filePath),
   saveVideo: (defaultName) => ipcRenderer.invoke('dialog:saveVideo', defaultName),
   writeFile: (filePath, data) => ipcRenderer.invoke('fs:writeFile', { data, filePath }),
