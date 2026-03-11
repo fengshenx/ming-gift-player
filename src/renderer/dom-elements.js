@@ -1,0 +1,16 @@
+export const elements = {
+  btnExport: document.getElementById('btn-export'),
+  btnLoadVideo: document.getElementById('btn-load-video'),
+  btnLoop: document.getElementById('btn-loop'),
+  btnPlay: document.getElementById('btn-play'),
+  btnStop: document.getElementById('btn-stop'),
+  canvas: document.getElementById('video-canvas'),
+  dropZone: document.getElementById('drop-zone'),
+  iconPause: document.getElementById('icon-pause'),
+  iconPlay: document.getElementById('icon-play'),
+  loadingMessage: document.getElementById('loading-message'),
+  loadingOverlay: document.getElementById('loading-overlay'),
+  loadingProgress: document.getElementById('loading-progress'),
+  videoInfo: document.getElementById('video-info'),
+  videoName: document.getElementById('video-name'),
+};
