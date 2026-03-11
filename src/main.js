@@ -13,10 +13,12 @@ let mainWindow = null;
 const createWindow = () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 960,
-    height: 640,
-    minWidth: 640,
-    minHeight: 480,
+    width: 375,
+    height: 885, // 815 (background) + 70 (controls)
+    resizable: false,
+    useContentSize: true,
+    frame: false, // Cleaner without title bar
+    transparent: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -24,7 +26,6 @@ const createWindow = () => {
       webSecurity: false,
     },
     backgroundColor: '#00000000',
-    transparent: true,
   });
 
   // and load the index.html of the app.
@@ -41,7 +42,7 @@ const createWindow = () => {
 
   // Open the DevTools in development.
   if (process.env.NODE_ENV === 'development' || MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 };
 

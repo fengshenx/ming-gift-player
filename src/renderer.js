@@ -195,10 +195,8 @@ class WebGLCompositor {
       throw new Error('WebGL is not available in this renderer.');
     }
 
-    this.backgroundImage = null;
     this.videoWidth = 640;
     this.videoHeight = 480;
-    this.backgroundTexture = this.createTexture();
     this.videoTexture = this.createTexture();
     this.vertexSource = `
       attribute vec2 a_position;
@@ -213,26 +211,36 @@ class WebGLCompositor {
     this.program = createProgram(this.gl, this.vertexSource, `
       precision mediump float;
 
-      uniform sampler2D u_background;
       uniform sampler2D u_video;
-      uniform float u_hasBackground;
+      uniform vec4 u_videoRect;
       varying vec2 v_texCoord;
 
       void main() {
-        vec2 alphaCoord = vec2(v_texCoord.x * 0.5, v_texCoord.y);
-        vec2 colorCoord = vec2(v_texCoord.x * 0.5 + 0.5, v_texCoord.y);
+        bool outsideVideo =
+          v_texCoord.x < u_videoRect.x ||
+          v_texCoord.x > u_videoRect.x + u_videoRect.z ||
+          v_texCoord.y < u_videoRect.y ||
+          v_texCoord.y > u_videoRect.y + u_videoRect.w;
+
+        if (outsideVideo) {
+          gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+          return;
+        }
+
+        vec2 videoCoord = vec2(
+          (v_texCoord.x - u_videoRect.x) / u_videoRect.z,
+          (v_texCoord.y - u_videoRect.y) / u_videoRect.w
+        );
+
+        vec2 alphaCoord = vec2(videoCoord.x * 0.5, videoCoord.y);
+        vec2 colorCoord = vec2(videoCoord.x * 0.5 + 0.5, videoCoord.y);
 
         vec4 colorSample = texture2D(u_video, colorCoord);
         vec3 alphaSample = texture2D(u_video, alphaCoord).rgb;
         float alpha = dot(alphaSample, vec3(0.299, 0.587, 0.114));
         alpha = clamp(alpha, 0.0, 1.0);
 
-        vec4 background = u_hasBackground > 0.5
-          ? texture2D(u_background, v_texCoord)
-          : vec4(0.10196, 0.10196, 0.18039, 1.0);
-
-        vec3 composited = mix(background.rgb, colorSample.rgb, alpha);
-        gl_FragColor = vec4(composited, 1.0);
+        gl_FragColor = vec4(colorSample.rgb, alpha);
       }
     `);
 
@@ -249,9 +257,8 @@ class WebGLCompositor {
 
     this.positionLocation = this.gl.getAttribLocation(this.program, 'a_position');
     this.texCoordLocation = this.gl.getAttribLocation(this.program, 'a_texCoord');
-    this.backgroundSamplerLocation = this.gl.getUniformLocation(this.program, 'u_background');
     this.videoSamplerLocation = this.gl.getUniformLocation(this.program, 'u_video');
-    this.hasBackgroundLocation = this.gl.getUniformLocation(this.program, 'u_hasBackground');
+    this.videoRectLocation = this.gl.getUniformLocation(this.program, 'u_videoRect');
 
     this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, false);
   }
@@ -285,10 +292,6 @@ class WebGLCompositor {
     return texture;
   }
 
-  setBackground(imageBitmap) {
-    this.backgroundImage = imageBitmap;
-  }
-
   setVideoSize(width, height) {
     this.videoWidth = width;
     this.videoHeight = height;
@@ -299,6 +302,13 @@ class WebGLCompositor {
 
   render(videoElement) {
     const gl = this.gl;
+    const packedVideoWidth = Math.max(1, videoElement.videoWidth || this.videoWidth);
+    const packedVideoHeight = Math.max(1, videoElement.videoHeight || this.videoHeight);
+    const displayVideoWidth = packedVideoWidth / 2;
+    const scaledVideoHeight = this.videoWidth * (packedVideoHeight / displayVideoWidth);
+    const normalizedHeight = scaledVideoHeight / this.videoHeight;
+    const videoBottom = 1.0 - normalizedHeight;
+    const videoHeight = normalizedHeight;
 
     gl.viewport(0, 0, this.videoWidth, this.videoHeight);
     gl.clearColor(0, 0, 0, 0);
@@ -307,19 +317,11 @@ class WebGLCompositor {
     gl.disable(gl.BLEND);
     gl.useProgram(this.program);
     this.bindGeometry(this.positionLocation, this.texCoordLocation);
+    gl.uniform4f(this.videoRectLocation, 0, videoBottom, 1, videoHeight);
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, this.backgroundTexture);
-    if (this.backgroundImage) {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.backgroundImage);
-      gl.uniform1f(this.hasBackgroundLocation, 1.0);
-    } else {
-      gl.uniform1f(this.hasBackgroundLocation, 0.0);
-    }
-    gl.uniform1i(this.backgroundSamplerLocation, 0);
-    gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.videoTexture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, videoElement);
-    gl.uniform1i(this.videoSamplerLocation, 1);
+    gl.uniform1i(this.videoSamplerLocation, 0);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 }
@@ -331,7 +333,6 @@ const state = {
   currentTime: 0,
   duration: 0,
   videoName: '',
-  backgroundImage: null,
   animationId: null,
   player: null,
   compositor: null,
@@ -347,7 +348,6 @@ const elements = {
   loadingProgress: document.getElementById('loading-progress'),
   exportOverlay: document.getElementById('export-overlay'),
   btnLoadVideo: document.getElementById('btn-load-video'),
-  btnLoadBg: document.getElementById('btn-load-bg'),
   btnPlay: document.getElementById('btn-play'),
   btnStop: document.getElementById('btn-stop'),
   btnLoop: document.getElementById('btn-loop'),
@@ -361,19 +361,19 @@ const elements = {
 };
 
 function showLoading(message, showProgress = false) {
-  elements.loadingMessage.textContent = message;
-  elements.loadingProgress.classList.toggle('hidden', !showProgress);
-  elements.loadingOverlay.classList.remove('hidden');
+  if (elements.loadingMessage) elements.loadingMessage.textContent = message;
+  if (elements.loadingProgress) elements.loadingProgress.classList.toggle('hidden', !showProgress);
+  if (elements.loadingOverlay) elements.loadingOverlay.classList.remove('hidden');
 }
 
 function hideLoading() {
-  elements.loadingOverlay.classList.add('hidden');
+  if (elements.loadingOverlay) elements.loadingOverlay.classList.add('hidden');
 }
 
 function updateUI() {
-  elements.videoInfo.classList.toggle('hidden', !state.videoLoaded);
-  elements.videoName.textContent = state.videoName;
-  elements.dropZone.classList.toggle('has-video', state.videoLoaded);
+  if (elements.videoInfo) elements.videoInfo.classList.toggle('hidden', !state.videoLoaded);
+  if (elements.videoName) elements.videoName.textContent = state.videoName;
+  if (elements.dropZone) elements.dropZone.classList.toggle('has-video', state.videoLoaded);
   elements.iconPlay.classList.toggle('hidden', state.playing);
   elements.iconPause.classList.toggle('hidden', !state.playing);
   elements.btnLoop.classList.toggle('active', state.looping);
@@ -449,11 +449,7 @@ async function attachVideoBlob(blob, name) {
     state.compositor = new WebGLCompositor(elements.canvas);
   }
 
-  state.compositor.setVideoSize(info.width, info.height);
-
-  if (state.backgroundImage) {
-    state.compositor.setBackground(state.backgroundImage);
-  }
+  state.compositor.setVideoSize(375, 815);
 
   player.video.loop = state.looping;
   player.video.onended = () => {
@@ -472,6 +468,15 @@ async function attachVideoBlob(blob, name) {
   renderCurrentFrame();
   updateUI();
   hideLoading();
+
+  try {
+    await player.play();
+    state.playing = true;
+    startAnimationLoop();
+    updateUI();
+  } catch (error) {
+    console.error('Error auto-playing video:', error);
+  }
 }
 
 async function handleLoadVideo() {
@@ -488,28 +493,6 @@ async function handleLoadVideo() {
     console.error('Error loading video:', error);
     hideLoading();
     alert(`Error loading video: ${error.message}`);
-  }
-}
-
-async function handleLoadBackground() {
-  try {
-    const result = await window.electronAPI.openBackground();
-    if (!result) {
-      return;
-    }
-
-    const bytes = decodeBase64ToUint8Array(result.data);
-    const blob = new Blob([bytes], { type: 'image/png' });
-    const imageBitmap = await createImageBitmap(blob);
-    state.backgroundImage = imageBitmap;
-
-    if (state.compositor) {
-      state.compositor.setBackground(imageBitmap);
-      renderCurrentFrame();
-    }
-  } catch (error) {
-    console.error('Error loading background:', error);
-    alert(`Error loading background: ${error.message}`);
   }
 }
 
@@ -620,7 +603,6 @@ function setupDragAndDrop() {
 
 function init() {
   elements.btnLoadVideo.addEventListener('click', handleLoadVideo);
-  elements.btnLoadBg.addEventListener('click', handleLoadBackground);
   elements.btnPlay.addEventListener('click', handlePlayPause);
   elements.btnStop.addEventListener('click', handleStop);
   elements.btnLoop.addEventListener('click', handleToggleLoop);
@@ -628,6 +610,12 @@ function init() {
   elements.progressBar.addEventListener('click', handleProgressClick);
 
   setupDragAndDrop();
+  
+  if (!state.compositor) {
+    state.compositor = new WebGLCompositor(elements.canvas);
+    state.compositor.setVideoSize(375, 815);
+  }
+
   updateUI();
 }
 
