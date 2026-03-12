@@ -37,21 +37,30 @@ body {
 .gp-app {
   display: flex;
   flex-direction: column;
-  width: var(--bg-width);
-  height: calc(var(--bg-height) + var(--controls-height));
+  width: 100%;
+  height: 100vh;
   margin: 0 auto;
 }
 
 .gp-main {
   position: relative;
   display: flex;
-  flex: none;
+  flex: 1 1 0;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  width: var(--bg-width);
-  height: var(--bg-height);
+  background: #000;
 }
 
-.gp-main::before {
+.gp-main-inner {
+  position: relative;
+  aspect-ratio: 375 / 815;
+  max-width: 100%;
+  max-height: 100%;
+  height: 100%;
+}
+
+.gp-main-inner::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -120,7 +129,7 @@ body {
   flex: none;
   flex-direction: column;
   justify-content: center;
-  height: var(--controls-height);
+  min-height: var(--controls-height);
   padding: 8px 16px;
   background: var(--header-bg);
   border-top: 1px solid var(--glass-border);

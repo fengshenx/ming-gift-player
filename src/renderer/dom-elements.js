@@ -5,6 +5,7 @@ export const elements = {
   btnPlay: document.getElementById('btn-play'),
   btnStop: document.getElementById('btn-stop'),
   canvas: document.getElementById('video-canvas'),
+  canvasContainer: document.getElementById('canvas-container'),
   dropOverlay: document.getElementById('drop-overlay'),
   dropZone: document.getElementById('drop-zone'),
   iconPause: document.getElementById('icon-pause'),

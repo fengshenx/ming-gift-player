@@ -130,6 +130,20 @@ async function loadBackgroundImage() {
   return state.backgroundImage;
 }
 
+function handleResize() {
+  if (!state.compositor || !elements.canvasContainer) {
+    return;
+  }
+
+  const width = elements.canvasContainer.clientWidth;
+  const height = elements.canvasContainer.clientHeight;
+
+  if (width > 0 && height > 0) {
+    state.compositor.setVideoSize(width, height);
+    renderCurrentFrame();
+  }
+}
+
 function ensureCompositor() {
   if (state.compositor) {
     return;
@@ -140,7 +154,11 @@ function ensureCompositor() {
   }
 
   state.compositor = new WebGlCompositor(elements.canvas);
-  state.compositor.setVideoSize(APP_WIDTH, BACKGROUND_HEIGHT);
+
+  const container = elements.canvasContainer;
+  const width = container ? container.clientWidth : APP_WIDTH;
+  const height = container ? container.clientHeight : BACKGROUND_HEIGHT;
+  state.compositor.setVideoSize(width, height);
 }
 
 function createVideoBlob(fileName, data) {
@@ -520,6 +538,10 @@ function init() {
   bindUiEvents();
   setupDragAndDrop();
   updateUi();
+
+  if (elements.canvasContainer) {
+    new ResizeObserver(handleResize).observe(elements.canvasContainer);
+  }
 }
 
 init();

@@ -33,7 +33,8 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     backgroundColor: BACKGROUND_COLOR,
     height: APP_HEIGHT,
-    resizable: false,
+    minHeight: Math.round(APP_HEIGHT / 2),
+    minWidth: Math.round(APP_WIDTH / 2),
     useContentSize: true,
     webPreferences: {
       contextIsolation: true,
