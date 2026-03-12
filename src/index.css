@@ -64,7 +64,7 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: url('/assets/background.png') no-repeat center center;
+  background: url('./assets/background.png') no-repeat center center;
   background-size: 100% 100%;
   pointer-events: none;
 }

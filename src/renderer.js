@@ -119,14 +119,15 @@ async function loadBackgroundImage() {
     return state.backgroundImage;
   }
 
-  const response = await fetch('/assets/background.png');
+  const img = new Image();
+  img.src = new URL('./assets/background.png', import.meta.url).href;
 
-  if (!response.ok) {
-    throw new Error('Failed to load background image.');
-  }
+  await new Promise((resolve, reject) => {
+    img.onload = resolve;
+    img.onerror = () => reject(new Error('Failed to load background image.'));
+  });
 
-  const blob = await response.blob();
-  state.backgroundImage = await createImageBitmap(blob);
+  state.backgroundImage = await createImageBitmap(img);
   return state.backgroundImage;
 }
 
